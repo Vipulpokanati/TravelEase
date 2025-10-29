@@ -80,3 +80,28 @@ class UserBookingsView(APIView):
         bookings = Booking.objects.filter(user_id=user_id)
         serializer = BookingSerializer(bookings, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+from django.contrib.auth.models import User
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from .serializers import UserSerializer
+
+class UserDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id):
+        try:
+            # Only allow users to view their own details (unless admin)
+            if request.user.id != user_id and not request.user.is_staff:
+                return Response(
+                    {"error": "You are not authorized to view this user's details."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            user = User.objects.get(id=user_id)
+            serializer = UserSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
