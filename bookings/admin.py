@@ -36,7 +36,7 @@ class SeatAdmin(admin.ModelAdmin):
     list_display = ('seat_number', 'bus', 'is_available')
 
 class BookingAdmin(admin.ModelAdmin):
-    list_display = ('user', 'bus', 'seat', 'booking_time', 'origin', 'destination', 'price')
+    list_display = ('ticket_id','user', 'bus', 'seat', 'booking_time', 'origin', 'destination', 'price')
 
 admin.site.register(Bus, BusAdmin)
 admin.site.register(Seat, SeatAdmin)

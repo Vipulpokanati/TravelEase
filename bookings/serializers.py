@@ -54,3 +54,16 @@ class BookingSerializer(serializers.ModelSerializer):
         fields = '__all__'
         # read_only_fields = ['user', 'booking_time', 'bus', 'seat']
         read_only_fields = ['user', 'booking_time', 'bus', 'seat', 'price','origin','destination','start_time','end_time']
+
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'username',
+            'email',
+            'is_staff',
+            'is_superuser',
+        ]
