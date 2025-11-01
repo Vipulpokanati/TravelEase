@@ -6,7 +6,7 @@ from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from.serializers import UserRegisterSerializer, busSerializer, SeatSerializer, BookingSerializer
 from django.db import transaction
-import shortuuid
+import uuid
 from .models import Bus, Seat, Booking
 from django.db.models import Prefetch
 
@@ -41,13 +41,6 @@ class BusDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Bus.objects.all()
     serializer_class = busSerializer
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
-from django.db import transaction
-from .models import Seat, Booking, Bus
-import uuid
 
 class Bookingview(APIView):
     permission_classes = [IsAuthenticated]
@@ -96,6 +89,9 @@ class Bookingview(APIView):
         seat_list = [b.seat.seat_number for b in bookings]
         total_price = bus.price * len(seat_list)
 
+        # Format booking_time for JSON
+        formatted_booking_time = bookings[0].booking_time.strftime("%Y-%m-%d %H:%M:%S")
+
         return Response({
             "message": f"{len(bookings)} seat(s) booked successfully!",
             "ticket_id": ticket_id,
@@ -106,7 +102,7 @@ class Bookingview(APIView):
             "destination": bus.destination,
             "price_per_seat": f"{bus.price:.2f}",
             "total_price": f"{total_price:.2f}",
-            "booking_time": bookings[0].booking_time,
+            "booking_time": formatted_booking_time,
         }, status=status.HTTP_201_CREATED)
 
 class UserBookingsView(APIView):
@@ -114,11 +110,11 @@ class UserBookingsView(APIView):
 
     def get(self, request, user_id):
         if request.user.id != user_id:
-<<<<<<< HEAD
             return Response({'error': 'You are not authorized to view these bookings.'},
                             status=status.HTTP_401_UNAUTHORIZED)
 
-        bookings = Booking.objects.filter(user_id=user_id).select_related('bus', 'seat')
+        # Fetch bookings in descending order of booking_time
+        bookings = Booking.objects.filter(user_id=user_id).select_related('bus', 'seat').order_by('-booking_time')
 
         if not bookings.exists():
             return Response({'message': 'No bookings found.'}, status=status.HTTP_200_OK)
@@ -136,7 +132,8 @@ class UserBookingsView(APIView):
                     "destination": b.bus.destination,
                     "price_per_seat": f"{b.bus.price:.2f}",
                     "seats": [],
-                    "booking_time": b.booking_time,
+                    # Format booking_time for JSON
+                    "booking_time": b.booking_time.strftime("%Y-%m-%d %H:%M:%S"),
                 }
             grouped[tid]["seats"].append(b.seat.seat_number)
 
@@ -144,19 +141,11 @@ class UserBookingsView(APIView):
         for t in grouped.values():
             t["total_price"] = f"{float(t['price_per_seat']) * len(t['seats']):.2f}"
 
-        return Response(list(grouped.values()), status=status.HTTP_200_OK)
-=======
-            return Response({'error': 'You are not authorized to view these bookings.'}, status=status.HTTP_401_UNAUTHORIZED)
-        bookings = Booking.objects.filter(user_id=user_id)
-        serializer = BookingSerializer(bookings, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-from django.contrib.auth.models import User
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
-from .serializers import UserSerializer
->>>>>>> 34f913c8938be3bddac076e59c37b2fc48d0f3df
+        # Sort grouped tickets by booking_time descending
+        sorted_tickets = sorted(grouped.values(), key=lambda x: x['booking_time'], reverse=True)
+
+        return Response(sorted_tickets, status=status.HTTP_200_OK)
+
 
 class UserDetailView(APIView):
     permission_classes = [IsAuthenticated]
