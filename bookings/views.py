@@ -4,11 +4,13 @@ from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
-from.serializers import UserRegisterSerializer, busSerializer, SeatSerializer, BookingSerializer
+from.serializers import UserRegisterSerializer, busSerializer, SeatSerializer, BookingSerializer, UserSerializer
 from django.db import transaction
 import uuid
 from .models import Bus, Seat, Booking
 from django.db.models import Prefetch
+from django.contrib.auth.models import User
+
 
 class RegisterView(APIView):
     def post(self, request):
@@ -152,7 +154,12 @@ class UserDetailView(APIView):
 
     def get(self, request, user_id):
         try:
-            # Only allow users to view their own details (unless admin)
+            if not request.user.is_authenticated:
+                return Response(
+                    {"error": "Authentication required."},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
             if request.user.id != user_id and not request.user.is_staff:
                 return Response(
                     {"error": "You are not authorized to view this user's details."},
@@ -162,6 +169,7 @@ class UserDetailView(APIView):
             user = User.objects.get(id=user_id)
             serializer = UserSerializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
+
         except User.DoesNotExist:
             return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
