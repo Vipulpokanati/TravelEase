@@ -127,6 +127,7 @@ class UserBookingsView(APIView):
         # Group bookings by ticket_id
         grouped = {}
         for b in bookings:
+            local_booking_time = timezone.localtime(b.booking_time)
             tid = b.ticket_id
             if tid not in grouped:
                 grouped[tid] = {
@@ -140,7 +141,7 @@ class UserBookingsView(APIView):
                     "price_per_seat": f"{b.bus.price:.2f}",
                     "seats": [],
                     # Format booking_time for JSON
-                    "booking_time": b.booking_time.strftime("%d-%m-%Y %H:%M:%S"),
+                    "booking_time": local_booking_time.strftime("%d-%m-%Y %H:%M:%S"),
                 }
             grouped[tid]["seats"].append(b.seat.seat_number)
 
