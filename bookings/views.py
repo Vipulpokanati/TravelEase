@@ -10,7 +10,7 @@ import uuid
 from .models import Bus, Seat, Booking
 from django.db.models import Prefetch
 from django.contrib.auth.models import User
-
+from django.utils import timezone
 
 class RegisterView(APIView):
     def post(self, request):
@@ -92,8 +92,8 @@ class Bookingview(APIView):
         total_price = bus.price * len(seat_list)
 
         # Format booking_time for JSON
-        formatted_booking_time = bookings[0].booking_time.strftime("%Y-%m-%d %H:%M:%S")
-
+        local_booking_time = timezone.localtime(bookings[0].booking_time)
+        formatted_booking_time = local_booking_time.strftime("%d-%m-%Y %H:%M:%S")
         return Response({
             "message": f"{len(bookings)} seat(s) booked successfully!",
             "ticket_id": ticket_id,
@@ -135,7 +135,7 @@ class UserBookingsView(APIView):
                     "price_per_seat": f"{b.bus.price:.2f}",
                     "seats": [],
                     # Format booking_time for JSON
-                    "booking_time": b.booking_time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "booking_time": b.booking_time.strftime("%d-%m-%Y %H:%M:%S"),
                 }
             grouped[tid]["seats"].append(b.seat.seat_number)
 
