@@ -94,11 +94,14 @@ class Bookingview(APIView):
         # Format booking_time for JSON
         local_booking_time = timezone.localtime(bookings[0].booking_time)
         formatted_booking_time = local_booking_time.strftime("%d-%m-%Y %H:%M:%S")
+       
         return Response({
             "message": f"{len(bookings)} seat(s) booked successfully!",
             "ticket_id": ticket_id,
             "bus_name": bus.bus_name,
             "bus_number": bus.bus_number,
+            "start_time": bus.start_time.strftime("%H:%M:%S"),
+            "end_time": bus.end_time.strftime("%H:%M:%S"),
             "seats": seat_list,
             "origin": bus.origin,
             "destination": bus.destination,
@@ -132,6 +135,8 @@ class UserBookingsView(APIView):
                     "bus_number": b.bus.bus_number,
                     "origin": b.bus.origin,
                     "destination": b.bus.destination,
+                    "start_time": b.bus.start_time,
+                    "end_time": b.bus.end_time,
                     "price_per_seat": f"{b.bus.price:.2f}",
                     "seats": [],
                     # Format booking_time for JSON
